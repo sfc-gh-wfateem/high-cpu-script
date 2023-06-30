@@ -29,8 +29,6 @@ cleanup() {
 
 collectData() {
 
-PID=$1
-
 mkdir -p ./$ROOT_DIR/$PID
 cd ./$ROOT_DIR/$PID
 
@@ -58,7 +56,11 @@ do
      top -b -n 1 >> ./top.out
      top -p $PID -b -H -n1 >> ./topH.out
      vmstat -wt >> ./vmstat.out
-     jstack -l $PID >> ./jstack.out
+     jstack $PID >> ./jstack.out
+     if [ $? -ne 0 ]; then
+        echo "Java Process ${PID} disappeared. Stopping collection for this process."
+        break;
+     fi
      sleep $INTERVAL
 done
 };
