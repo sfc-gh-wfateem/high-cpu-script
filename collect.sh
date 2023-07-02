@@ -1,18 +1,26 @@
 #!/bin/bash
 
-#This script was developed by Snowflake support, with minimal testing and error handling, in order to investigate JVM related performance issues 
-#The script must run as the root user in order to run Java's jstack command by sudoing as the user
-#that owns the Java process in question. The script assumes that you can run the jstack command directly, if not, then you'll need
-#to add the full path of the Java home's bin directory before jstack, for example: /usr/java/jdk1.8_182/bin/jstack
-#This script takes two arguments, PID of the Java process to inspect and username that owns the Java process.
+#This script was developed by Snowflake support, with minimal testing and error handling, in order
+# to investigate JVM related performance issues The script must run as the user that owns the Java
+# process in question. The script assumes that you can run the jstack command directly, if not,
+# then you'll need to add the full path of the Java home's bin directory before jstack, for example:
+# /usr/java/jdk1.8_182/bin/jstack
 
 INTERVAL=2
 ROOT_DIR=$(hostname)
 mkdir -p ./$ROOT_DIR
+CHILD_PID=()
 
-trap cleanup 1 2 3 6 SIGINT 
+trap cleanup SIGINT INT
 
 cleanup() {
+
+  echo "Killing child processes"
+
+  for i in "${CHILD_PID[@]}"
+  do
+    kill -9 $i
+  done;
 
   echo "Exiting script: ctrl+c issued."
   echo "Copying /var/log/messages"
@@ -29,6 +37,7 @@ cleanup() {
 
 collectData() {
 
+PID=$1
 mkdir -p ./$ROOT_DIR/$PID
 cd ./$ROOT_DIR/$PID
 
@@ -57,6 +66,8 @@ do
      top -p $PID -b -H -n1 >> ./topH.out
      vmstat -wt >> ./vmstat.out
      jstack $PID >> ./jstack.out
+     #If jstack command has an exit status other than 0, then break out of the loop because
+     #an error occurred. Most likely because the Java process stopped and doesn't exist anymore.
      if [ $? -ne 0 ]; then
         echo "Java Process ${PID} disappeared. Stopping collection for this process."
         break;
@@ -69,8 +80,16 @@ jps | while read a
 do
  PID=$(echo $a | awk '{print $1}')
  CLASS_NAME=$(echo $a | awk '{print $2}')
- if [ -z "$CLASS_NAME" ]
+ if [ ${CLASS_NAME} == $1 ]
   then
-   collectData ${PID}
+   collectData ${PID} &
+   CHILD_PID+=( $! )
  fi
+done
+
+#Need to make sure the script process remains alive to listen for the interrupt signal to cleanup
+while :
+do
+  echo "Press Ctrl+C to stop the script."
+  a=1
 done
