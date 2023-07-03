@@ -80,7 +80,7 @@ jps | while read a
 do
  PID=$(echo $a | awk '{print $1}')
  CLASS_NAME=$(echo $a | awk '{print $2}')
- if [ ${CLASS_NAME} == $1 ]
+ if [ -z "$CLASS_NAME" ]
   then
    collectData ${PID} &
    CHILD_PID+=( $! )
