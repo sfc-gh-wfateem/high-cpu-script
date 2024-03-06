@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#This script was developed by Snowflake support, with minimal testing and error handling, in order
+#This script was developed with minimal testing and error handling, in order
 # to investigate JVM related performance issues The script must run as the user that owns the Java
 # process in question. The script assumes that you can run the jstack command directly, if not,
 # then you'll need to add the full path of the Java home's bin directory before jstack, for example:
