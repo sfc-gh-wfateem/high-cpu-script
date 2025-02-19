@@ -38,7 +38,12 @@ cleanup() {
 collectData() {
 
 PID=$1
-mkdir -p ./$ROOT_DIR/$PID
+if [ ! -d "./$ROOT_DIR/$PID" ]; then
+  echo "./$ROOT_DIR/$PID  does not exist. Creating directory for process."
+  mkdir -p ./$ROOT_DIR/$PID
+   
+fi
+
 cd ./$ROOT_DIR/$PID
 
 echo "Collecting data from Java process with PID $PID run by user $USER"
@@ -80,7 +85,7 @@ jps | while read a
 do
  PID=$(echo $a | awk '{print $1}')
  CLASS_NAME=$(echo $a | awk '{print $2}')
- if [ ${CLASS_NAME} == $1 ]
+ if [ ${CLASS_NAME} == $1 ] || [ $PID == $1 ]
   then
    collectData ${PID} &
    CHILD_PID+=( $! )
@@ -88,8 +93,9 @@ do
 done
 
 #Need to make sure the script process remains alive to listen for the interrupt signal to cleanup
+echo "Press Ctrl+C to stop the script."
 while :
 do
-  echo "Press Ctrl+C to stop the script."
+  #waiting for interrupt signal
   a=1
 done
