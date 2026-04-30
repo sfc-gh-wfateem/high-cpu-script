@@ -6,7 +6,7 @@
 # then you'll need to add the full path of the Java home's bin directory before jstack, for example:
 # /usr/java/jdk1.8_182/bin/jstack
 
-INTERVAL=2
+INTERVAL=25
 ROOT_DIR=$(hostname)
 mkdir -p ./$ROOT_DIR
 CHILD_PID=()
@@ -85,7 +85,7 @@ jps | while read a
 do
  PID=$(echo $a | awk '{print $1}')
  CLASS_NAME=$(echo $a | awk '{print $2}')
- if [ ${CLASS_NAME} == $1 ] || [ $PID == $1 ]
+ if [[ ${CLASS_NAME} == $1 ]] || [[ $PID == $1 ]]
   then
    collectData ${PID} &
    CHILD_PID+=( $! )
